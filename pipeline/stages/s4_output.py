@@ -12,6 +12,7 @@ from app.models.book import Book
 from app.models.journal_entry import JournalEntry
 from app.models.location import Location
 from pipeline.models import ExtractedStory, OutputResult, SegmentResultV2
+from pipeline.stages.s3_extract import _normalize_story_data
 
 
 async def output_to_db(
@@ -31,6 +32,7 @@ async def output_to_db(
         if not story_path.exists():
             continue
         data = json.loads(story_path.read_text(encoding="utf-8"))
+        _normalize_story_data(data)
         stories.append(ExtractedStory(**data))
 
     if not stories:

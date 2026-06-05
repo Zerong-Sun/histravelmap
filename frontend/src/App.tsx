@@ -10,7 +10,7 @@ import { EntryDetail } from "./components/Panel/EntryDetail";
 import { LocationPage } from "./pages/LocationPage";
 import EntryPage from "./pages/EntryPage";
 import { useEntries, useLocations, useSearch } from "./api/hooks";
-import { ChevronUp, ChevronDown } from "lucide-react";
+import { ChevronUp, ChevronDown, Compass, Map } from "lucide-react";
 import { getLanguage, type Language } from "./lib/language";
 
 const queryClient = new QueryClient();
@@ -60,7 +60,6 @@ function HomePage() {
     ? searchResults.flatMap((e) => e.locations).filter((l, i, arr) => arr.findIndex((x) => x.id === l.id) === i)
     : locations;
 
-  // Apply location filter
   const displayEntries = useMemo(() => {
     if (!locationFilter) return displayEntriesRaw;
     return displayEntriesRaw.filter((entry) =>
@@ -76,7 +75,6 @@ function HomePage() {
     );
   }, [displayEntriesRaw, locationFilter]);
 
-  // Handle entry selection — focus map on entry locations
   const handleSelectEntry = useCallback(
     (id: number) => {
       setSelectedEntryId(id);
@@ -93,7 +91,6 @@ function HomePage() {
     [displayEntriesRaw]
   );
 
-  // Handle marker click — filter entries by location
   const handleMarkerClick = useCallback((location: MapLocation) => {
     setLocationFilter({
       lat: location.latitude,
@@ -104,25 +101,77 @@ function HomePage() {
 
   return (
     <div className="h-full flex flex-col">
-      <header className="h-14 border-b flex items-center px-4 gap-3 bg-white z-20">
-        <h1 className="text-lg font-bold whitespace-nowrap">HiSMap</h1>
-        <SearchBar onSearch={setSearchQuery} />
-        <FilterPanel onChange={setFilters} onLanguageChange={setLanguage} />
-      </header>
-      <div className="flex-1 flex relative overflow-hidden">
-        <aside className="hidden md:block w-80 border-r overflow-y-auto bg-white z-20">
-          <div className="p-3 border-b text-sm text-gray-500">
-            {displayEntries.length} 条游记
+      {/* Header */}
+      <header className="h-16 flex items-center px-5 gap-4 z-20 relative overflow-hidden"
+        style={{
+          background: 'linear-gradient(135deg, #1a1a2e 0%, #222240 40%, #2a2a4a 100%)',
+          borderBottom: '1px solid rgba(201, 168, 76, 0.3)',
+        }}
+      >
+        {/* Decorative background pattern */}
+        <div className="absolute inset-0 opacity-5"
+          style={{
+            backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 20px, rgba(201,168,76,0.3) 20px, rgba(201,168,76,0.3) 21px)`,
+          }}
+        />
+
+        {/* Logo */}
+        <div className="flex items-center gap-2.5 relative z-10 shrink-0">
+          <div className="w-9 h-9 rounded-lg flex items-center justify-center animate-glow"
+            style={{ background: 'linear-gradient(135deg, #c9a84c, #e8d5a0)' }}>
+            <Compass className="h-5 w-5 text-[#1a1a2e]" strokeWidth={2.5} />
           </div>
-          <ResultList
-            entries={displayEntries}
-            onSelect={handleSelectEntry}
-            selectedId={selectedEntryId}
-            locationFilter={locationFilter}
-            onClearFilter={() => setLocationFilter(null)}
-            language={language}
-          />
+          <div>
+            <h1 className="text-lg font-bold text-white tracking-wide font-serif-display">HiSMap</h1>
+            <p className="text-[10px] text-amber-200/50 -mt-0.5 tracking-widest uppercase">Historical Journey Map</p>
+          </div>
+        </div>
+
+        {/* Search */}
+        <div className="flex-1 relative z-10 max-w-xl">
+          <SearchBar onSearch={setSearchQuery} />
+        </div>
+
+        {/* Filters */}
+        <div className="relative z-10 shrink-0">
+          <FilterPanel onChange={setFilters} onLanguageChange={setLanguage} />
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <div className="flex-1 flex relative overflow-hidden">
+        {/* Sidebar */}
+        <aside className="hidden md:flex w-80 flex-col border-r z-20 shrink-0"
+          style={{
+            background: 'linear-gradient(180deg, #faf8f3 0%, #f5f0e8 100%)',
+            borderColor: 'rgba(0,0,0,0.08)',
+          }}
+        >
+          <div className="px-4 py-3 border-b flex items-center gap-2 shrink-0"
+            style={{ borderColor: 'rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.5)' }}>
+            <Map className="h-4 w-4 text-amber-600" />
+            <span className="text-sm font-medium text-gray-700">
+              {displayEntries.length} 条游记
+            </span>
+            {locationFilter && (
+              <span className="text-xs text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full ml-auto">
+                位置筛选中
+              </span>
+            )}
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            <ResultList
+              entries={displayEntries}
+              onSelect={handleSelectEntry}
+              selectedId={selectedEntryId}
+              locationFilter={locationFilter}
+              onClearFilter={() => setLocationFilter(null)}
+              language={language}
+            />
+          </div>
         </aside>
+
+        {/* Map */}
         <div className="flex-1 relative z-0">
           <MapView
             locations={displayLocations}
@@ -131,25 +180,47 @@ function HomePage() {
             onMarkerClick={handleMarkerClick}
           />
         </div>
+
+        {/* Desktop Detail Panel */}
         {selectedEntryId && (
-          <div className="hidden md:block absolute right-0 top-0 bottom-0 w-96 bg-white border-l shadow-lg z-30">
+          <div className="hidden md:block absolute right-0 top-0 bottom-0 w-96 z-30 animate-slide-in-right"
+            style={{
+              background: 'rgba(255,255,255,0.95)',
+              backdropFilter: 'blur(16px)',
+              borderLeft: '1px solid rgba(0,0,0,0.08)',
+              boxShadow: '-8px 0 30px rgba(0,0,0,0.08)',
+            }}
+          >
             <EntryDetail entryId={selectedEntryId} onClose={() => setSelectedEntryId(null)} language={language} />
           </div>
         )}
+
+        {/* Mobile Drawer */}
         <div
-          className={`md:hidden absolute bottom-0 left-0 right-0 bg-white border-t shadow-lg transition-transform duration-300 z-30 ${
-            drawerOpen ? "translate-y-0" : "translate-y-[calc(100%-3rem)]"
+          className={`md:hidden absolute bottom-0 left-0 right-0 z-30 transition-all duration-500 ease-out ${
+            drawerOpen ? "translate-y-0" : "translate-y-[calc(100%-3.5rem)]"
           }`}
-          style={{ maxHeight: "70vh" }}
+          style={{
+            maxHeight: "75vh",
+            background: 'rgba(255,255,255,0.95)',
+            backdropFilter: 'blur(16px)',
+            borderTop: '1px solid rgba(0,0,0,0.08)',
+            boxShadow: '0 -8px 30px rgba(0,0,0,0.1)',
+            borderRadius: '20px 20px 0 0',
+          }}
         >
+          {/* Drawer Handle */}
           <button
             onClick={() => setDrawerOpen(!drawerOpen)}
-            className="w-full flex items-center justify-center py-2 border-b"
+            className="w-full flex flex-col items-center py-2.5 group"
           >
-            {drawerOpen ? <ChevronDown className="h-5 w-5" /> : <ChevronUp className="h-5 w-5" />}
-            <span className="ml-2 text-sm text-gray-500">{displayEntries.length} 条游记</span>
+            <div className="w-10 h-1 rounded-full bg-gray-300 group-hover:bg-gray-400 transition-colors mb-1.5" />
+            <div className="flex items-center gap-2">
+              {drawerOpen ? <ChevronDown className="h-4 w-4 text-gray-400" /> : <ChevronUp className="h-4 w-4 text-gray-400" />}
+              <span className="text-sm text-gray-500 font-medium">{displayEntries.length} 条游记</span>
+            </div>
           </button>
-          <div className="overflow-y-auto" style={{ maxHeight: "calc(70vh - 3rem)" }}>
+          <div className="overflow-y-auto" style={{ maxHeight: "calc(75vh - 4rem)" }}>
             {selectedEntryId ? (
               <EntryDetail entryId={selectedEntryId} onClose={() => setSelectedEntryId(null)} language={language} />
             ) : (

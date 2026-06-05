@@ -80,9 +80,15 @@ def _normalize_story_data(data: dict) -> None:
     # Normalize annotations: wrap plain strings in {"note": str}
     ann = data.get("annotations")
     if isinstance(ann, list):
-        data["annotations"] = [
-            {"note": a} if isinstance(a, str) else a for a in ann
-        ]
+        normalized: list[dict] = []
+        for a in ann:
+            if isinstance(a, str):
+                normalized.append({"note": a})
+            elif isinstance(a, dict):
+                normalized.append(a)
+            else:
+                normalized.append({"note": str(a)})
+        data["annotations"] = normalized
 
 
 async def extract(
